@@ -28,3 +28,8 @@
 ///22 Noviembre
 ///Implementado lógica para agrega, consultar y eliminar usuario
 
+///25 Noviembre
+///Se integran las clases faltantes de las compañeras referente a lo de vales
+///desde vales de entrada, salida y consultar vales. Falta integrar la lógica para la clase
+///mapaDespensas.
+

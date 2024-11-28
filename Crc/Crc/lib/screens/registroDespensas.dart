@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'apiService.dart';
 
 class RegistroDespensas extends StatefulWidget {
   @override
@@ -7,6 +8,7 @@ class RegistroDespensas extends StatefulWidget {
 
 class _RegistroDespensasState extends State<RegistroDespensas> {
   final _formKey = GlobalKey<FormState>();
+  final ApiService apiService = ApiService(); // Instancia de ApiService
 
   final TextEditingController nombreController = TextEditingController();
   final TextEditingController calleController = TextEditingController();
@@ -27,13 +29,34 @@ class _RegistroDespensasState extends State<RegistroDespensas> {
     super.dispose();
   }
 
-  void _submitForm() {
+  void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       // Aquí puedes agregar la lógica para enviar los datos
       // a tu backend o base de datos
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Registro guardado exitosamente")),
-      );
+      try {
+        await apiService.submitRegistroDespensas({
+          'nombre': nombreController.text,
+          'calle': calleController.text,
+          'numero': numeroController.text,
+          'colonia': coloniaController.text,
+          'cp': cpController.text,
+          'telefono': telefonoController.text,
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Registro guardado exitosamente")),
+        );
+        // Limpiar los campos después de guardar
+        nombreController.clear();
+        calleController.clear();
+        numeroController.clear();
+        coloniaController.clear();
+        cpController.clear();
+        telefonoController.clear();
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error al guardar el registro: $e")),
+        );
+      }
     }
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'apiService.dart';
 import 'package:signature/signature.dart';
-import "package:image_picker/image_picker.dart";
+import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
 class FormularioEstudio extends StatefulWidget {
@@ -10,6 +11,7 @@ class FormularioEstudio extends StatefulWidget {
 
 class _FormularioEstudioState extends State<FormularioEstudio> {
   final _formKey = GlobalKey<FormState>();
+  final ApiService apiService = ApiService(); // Instancia de ApiService
 
   // Controladores para los campos de entrada de texto
   final TextEditingController motivoController = TextEditingController();
@@ -31,23 +33,6 @@ class _FormularioEstudioState extends State<FormularioEstudio> {
   String? selectedSituacionVivienda;
   String? selectedNivelSocioeconomico;
 
-  // Listas de opciones
-  final List<String> sexoOptions = ['Hombre', 'Mujer'];
-  final List<String> generoOptions = [
-    'Mujer cisgénero',
-    'Hombre cisgénero',
-    'Mujer trans',
-    'Hombre trans',
-    'Bigenero',
-    'Fluido',
-    'No binario',
-    'Agénero',
-    'Otro género',
-    'Sin especificar'
-  ];
-  final List<String> situacionViviendaOptions = ['Propia', 'Pagándose', 'Rentada', 'Prestada'];
-  final List<String> nivelSocioeconomicoOptions = ['Bajo', 'Medio-bajo', 'Medio', 'Alto'];
-
   // Controlador para la firma
   final SignatureController _signatureController = SignatureController(
     penColor: Colors.black,
@@ -58,7 +43,93 @@ class _FormularioEstudioState extends State<FormularioEstudio> {
   File? frontIdImage;
   File? backIdImage;
 
-  // Método para seleccionar una imagen
+  // Método para enviar el formulario
+  void _submitForm() async {
+    if (_formKey.currentState!.validate()) {
+      final formData = {
+        'motivoEstudio': motivoController.text,
+        'calle': calleController.text,
+        'colonia': coloniaController.text,
+        'cp': cpController.text,
+        'nombreSolicitante': nombreSolicitanteController.text,
+        'fechaEstudio': fechaController.text,
+        'telefono': telefonoController.text,
+        'ocupacion': ocupacionController.text,
+        'edad': edadController.text,
+        'escolaridad': escolaridadController.text,
+        'estadoCivil': estadoCivilController.text,
+        'ingresoSol': ingresoController.text,
+        'sexo': selectedSexo,
+        'genero': selectedGenero,
+        'firma': await _signatureController.toPngBytes()?.toString(),
+      };
+
+      try {
+        await apiService.submitFormularioEstudio(formData);
+        _resetForm();
+        _showSuccessPopup();
+      } catch (e) {
+        _showErrorPopup("Error al guardar el formulario: $e");
+      }
+    }
+  }
+
+  void _resetForm() {
+    motivoController.clear();
+    calleController.clear();
+    coloniaController.clear();
+    cpController.clear();
+    nombreSolicitanteController.clear();
+    fechaController.clear();
+    telefonoController.clear();
+    ocupacionController.clear();
+    edadController.clear();
+    escolaridadController.clear();
+    estadoCivilController.clear();
+    ingresoController.clear();
+    selectedSexo = null;
+    selectedGenero = null;
+    _signatureController.clear();
+    frontIdImage = null; // Limpiar imagen frontal
+    backIdImage = null; // Limpiar imagen trasera
+  }
+
+  void _showSuccessPopup() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Formulario guardado"),
+          content: Text("Formulario de estudio socioeconómico guardado exitosamente."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop (),
+              child: Text("Aceptar"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showErrorPopup(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Error"),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text("Aceptar"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _pickImage(ImageSource source, bool isFront) async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: source);
@@ -114,7 +185,7 @@ class _FormularioEstudioState extends State<FormularioEstudio> {
             _buildTextField(nombreSolicitanteController, 'Nombre del solicitante'),
             _buildTextField(fechaController, 'Fecha'),
 
-             Row(
+            Row(
               children: [
                 Expanded(child: _buildTextField(telefonoController, 'Teléfono')),
                 SizedBox(width: 8),
@@ -123,7 +194,7 @@ class _FormularioEstudioState extends State<FormularioEstudio> {
                 Expanded(child: _buildTextField(edadController, 'Edad', keyboardType: TextInputType.number)),
                 SizedBox(width: 8),
                 Expanded(
-                  child: _buildDropdown(sexoOptions, 'Sexo', selectedSexo, (value) {
+                  child: _buildDropdown(['Hombre', 'Mujer'], 'Sexo', selectedSexo, (value) {
                     setState(() { selectedSexo = value; });
                   }),
                 ),
@@ -139,7 +210,10 @@ class _FormularioEstudioState extends State<FormularioEstudio> {
                 Expanded(child: _buildTextField(ingresoController, 'Ingreso sol')),
                 SizedBox(width: 8),
                 Expanded(
-                  child: _buildDropdown(generoOptions, 'Género', selectedGenero, (value) {
+                  child: _buildDropdown([
+                    'Mujer cisgénero', 'Hombre cisgénero', 'Mujer trans', 'Hombre trans',
+                    'Bigenero', 'Fluido', 'No binario', 'Agénero', 'Otro género', 'Sin especificar'
+                  ], 'Género', selectedGenero, (value) {
                     setState(() { selectedGenero = value; });
                   }),
                 ),
@@ -184,14 +258,14 @@ class _FormularioEstudioState extends State<FormularioEstudio> {
             // Sección 4: Pertenencias
             Text('Pertenencias', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             _buildTextField(null, 'Vehículo'),
-            _buildDropdown (situacionViviendaOptions, 'Situación de la vivienda', selectedSituacionVivienda, (value) {
+            _buildDropdown(['Propia', 'Pagándose', 'Rentada', 'Prestada'], 'Situación de la vivienda', selectedSituacionVivienda, (value) {
               setState(() { selectedSituacionVivienda = value; });
             }),
             _buildTextField(null, 'Material de paredes'),
             _buildTextField(null, 'Material de techo'),
             _buildTextField(null, 'Material de piso'),
             _buildTextField(null, 'Número de cuartos', keyboardType: TextInputType.number),
-            _buildDropdown(nivelSocioeconomicoOptions, 'Nivel Socioeconómico', selectedNivelSocioeconomico, (value) {
+            _buildDropdown(['Bajo', 'Medio-bajo', 'Medio', 'Alto'], 'Nivel Socioeconómico', selectedNivelSocioeconomico, (value) {
               setState(() { selectedNivelSocioeconomico = value; });
             }),
             _buildTextField(null, 'Observaciones', maxLength: 255),
@@ -232,34 +306,10 @@ class _FormularioEstudioState extends State<FormularioEstudio> {
                   child: Text('Limpiar'),
                 ),
                 ElevatedButton(
-                  onPressed: () async {
-                    if (_signatureController.isNotEmpty) {
-                      final signature = await _signatureController.toPngBytes();
-                      if (signature != null) {
-                        // Lógica para guardar la firma
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Firma guardada')),
-                        );
-                      }
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Por favor, firme antes de guardar')),
-                      );
-                    }
-                  },
-                  child: Text('Guardar Firma'),
+                  onPressed: _submitForm,
+                  child: Text('Guardar Formulario'),
                 ),
               ],
-            ),
-
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  // Lógica para guardar datos
-                }
-              },
-              child: Text('Guardar Formulario'),
             ),
           ],
         ),
@@ -300,10 +350,10 @@ class _FormularioEstudioState extends State<FormularioEstudio> {
         imageFile != null
             ? Image.file(imageFile, height: 150, fit: BoxFit.cover)
             : Container(
-                height: 150,
-                color: Colors.grey[200],
-                child: Center(child: Text('No hay imagen seleccionada')),
-              ),
+          height: 150,
+          color: Colors.grey[200],
+          child: Center(child: Text('No hay imagen seleccionada')),
+        ),
         SizedBox(height: 10),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -322,25 +372,24 @@ class _FormularioEstudioState extends State<FormularioEstudio> {
     );
   }
 
-// Construir un campo de selección (dropdown)
-   Widget _buildDropdown(List<String> options, String label, String? selectedValue, Function(String?) onChanged) {
-     return Padding(
-       padding: const EdgeInsets.symmetric(vertical: 8.0),
-       child: DropdownButtonFormField<String>(
-         decoration: InputDecoration(
-           labelText: label,
-           border: OutlineInputBorder(),
-         ),
-         value: selectedValue,
-         onChanged: onChanged,
-         items: options.map<DropdownMenuItem<String>>((String value) {
-           return DropdownMenuItem<String>(
-             value: value,
-             child: Text(value),
-           );
-         }).toList(),
-       ),
-     );
-   }
+  // Construir un campo de selección (dropdown)
+  Widget _buildDropdown(List<String> options, String label, String? selectedValue, Function(String?) onChanged) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: DropdownButtonFormField<String>(
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(),
+        ),
+        value: selectedValue,
+        onChanged: onChanged,
+        items: options.map<DropdownMenuItem<String>>((String value) {
+          return DropdownMenuItem<String>(
+            value: value,
+            child: Text(value),
+          );
+        }).toList(),
+      ),
+    );
+  }
 }
-

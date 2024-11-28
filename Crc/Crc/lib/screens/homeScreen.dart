@@ -7,6 +7,10 @@ import '../widgets/header.dart';
 import 'administrarAcceso.dart';
 import 'login.dart';
 import 'registroDespensas.dart';
+import 'mapaDespensas.dart';
+import 'valesSalida.dart';
+import 'consultarVales.dart';
+import 'entradaVales.dart';
 
 class HomeScreen extends StatefulWidget {
   final int userLevel; // Nivel del usuario
@@ -109,18 +113,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             Text(
                               "Clima actual",
-                              style:
-                              TextStyle(color: Colors.white, fontSize: 18),
+                              style: TextStyle(color: Colors.white, fontSize: 18),
                             ),
                             Text(
                               "$_weatherDescription",
-                              style:
-                              TextStyle(color: Colors.white, fontSize: 16),
+                              style: TextStyle(color: Colors.white, fontSize: 16),
                             ),
                             Text(
                               "${_temperature.toStringAsFixed(1)} °C",
-                              style:
-                              TextStyle(color: Colors.white, fontSize: 16),
+                              style: TextStyle(color: Colors.white, fontSize: 16),
                             ),
                           ],
                         ),
@@ -154,7 +155,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                 ),
               ),
-              SizedBox(height: 10),
               SizedBox(height: 10),
               // Grid de opciones
               LayoutBuilder(
@@ -200,31 +200,83 @@ class _HomeScreenState extends State<HomeScreen> {
                           );
                         },
                       ),
-                      _buildTile(context, 'Mapa de despensas', Icons.map,
-                          tileWidth, tileHeight, () {}),
-                      _buildTile(context, 'Vales de entrada',
-                          Icons.assignment_turned_in, tileWidth, tileHeight, () {}),
-                      _buildTile(context, 'Vales de salida',
-                          Icons.assignment_return, tileWidth, tileHeight, () {}),
-                      _buildTile(context, 'Consulta vales', Icons.search,
-                          tileWidth, tileHeight, () {}),
+                      _buildTile(
+                        context,
+                        'Mapa de despensas',
+                        Icons.map,
+                        tileWidth,
+                        tileHeight,
+                            () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => MapaDespensas(),
+                            ),
+                          );
+                        },
+                      ),
+                      _buildTile(
+                        context,
+                        'Vales de entrada',
+                        Icons.assignment_turned_in,
+                        tileWidth,
+                        tileHeight,
+                            () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => EntradaVales(), // Navegar a EntradaVales
+                            ),
+                          );
+                        },
+                      ),
+                      _buildTile(
+                        context,
+                        'Vales de salida',
+                        Icons.assignment_return,
+                        tileWidth,
+                        tileHeight,
+                            () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ValesSalida(),
+                            ),
+                          );
+                        },
+                      ),
+                      _buildTile(
+                        context,
+                        'Consulta vales',
+                        Icons.search,
+                        tileWidth,
+                        tileHeight,
+                            () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ConsultarVales(), // Navegar a ConsultarVales
+                            ),
+                          );
+                        },
+                      ),
                       // Mostrar solo para usuarios nivel 1
-                       if (widget.userLevel == 1)
-                         _buildTile(
-                           context,
-                           'Administrar acceso',
-                           Icons.admin_panel_settings,
-                           tileWidth,
-                           tileHeight,
-                               () {
-                             Navigator.push(
-                               context,
-                               MaterialPageRoute(
-                                 builder: (context) => AdministrarAcceso(login: widget.login),
-                               ),
-                             );
-                           },
-                         ),
+                      if (widget.userLevel == 1)
+                        _buildTile(
+                          context,
+                          'Administrar acceso',
+                          Icons.admin_panel_settings,
+                          tileWidth,
+                          tileHeight,
+                              () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AdministrarAcceso(login: widget.login),
+                              ),
+                            );
+                          },
+                        ),
                     ],
                   );
                 },
@@ -270,38 +322,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
-  Widget _buildTile(
-      BuildContext context,
-      String title,
-      IconData icon,
-      double width,
-      double height,
-      VoidCallback onTap,
-      ) {
-    return Container(
-      width: width,
-      height: height,
-      child: Card(
-        color: Color(0xFF0192C8),
-        child: InkWell(
-          onTap: onTap,
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, size: width * 0.5, color: Colors.white),
-                SizedBox(height: height * 0.05),
-                Text(
-                  title,
-                  style: TextStyle(color: Colors.white, fontSize: width * 0.09),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-

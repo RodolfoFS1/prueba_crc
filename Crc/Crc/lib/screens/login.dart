@@ -25,7 +25,7 @@ class _LoginState extends State<Login> {
 
   // Mapa de usuarios con niveles
   final Map<String, int> _userLevels = {
-    'r': 1, // Nivel maestro
+    'rfierro@hotmail.com': 1, // Nivel maestro
     'user1': 0, // Nivel básico
   };
 
